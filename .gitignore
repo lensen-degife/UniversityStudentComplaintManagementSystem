@@ -28,3 +28,6 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+
+#to ignore the details about database connection and securiyt
+dbconfig.properties

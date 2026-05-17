@@ -1,20 +1,28 @@
 package app.db;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
+import java.io.InputStream;
+import java.util.Properties;
 
 public class DBConnection {
-    private static final String URL = "jdbc:sqlserver://localhost:1433;databaseName=ComplaintDB;encrypt=false";
-    private static final String USER = "sa";
-    private static final String PASS = "your_password";
+    private static Properties props = new Properties();
 
-    public static Connection getConnection() {
-        try {
-            Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
-            return DriverManager.getConnection(URL, USER, PASS);
+    static {
+        try (InputStream is = DBConnection.class.getResourceAsStream("/dbconfig.properties")) {
+            if (is == null) {
+                throw new RuntimeException("dbconfig.properties file not found!");
+            }
+            props.load(is);
         } catch (Exception e) {
-            System.out.println(e);
-            return null;
+            e.printStackTrace();
         }
+    }
+
+    public static java.sql.Connection getConnection() throws Exception {
+        Class.forName(props.getProperty("db.driver"));
+        return java.sql.DriverManager.getConnection(
+                props.getProperty("db.url"),
+                props.getProperty("db.username"),
+                props.getProperty("db.password")
+        );
     }
 }
