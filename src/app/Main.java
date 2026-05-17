@@ -2,6 +2,8 @@ package app;
 
 import app.dao.ComplaintDAO;
 import app.model.Complaint;
+
+import java.util.List;
 import java.util.Scanner;
 
 public class Main {
@@ -58,9 +60,22 @@ public class Main {
             System.out.println("❌ Failed to submit complaint.");
         }
     }
-
     private static void viewComplaints() {
-        // We'll implement this after improving ComplaintDAO
-        System.out.println("View complaints feature coming soon...");
+        System.out.println("\n--- All Complaints ---");
+        List<Complaint> complaints = ComplaintDAO.getAllComplaints();
+
+        if (complaints.isEmpty()) {
+            System.out.println("No complaints found.");
+            return;
+        }
+
+        for (Complaint c : complaints) {
+            System.out.println("ID          : " + c.getId());
+            System.out.println("Student     : " + c.getStudentName());
+            System.out.println("Category    : " + c.getCategory());
+            System.out.println("Description : " + c.getDescription());
+            System.out.println("Status      : " + c.getStatus());
+            System.out.println("-------------------------------");
+        }
     }
 }

@@ -10,7 +10,7 @@ public class DBConnection {
     private static Properties props = new Properties();
 
     static {
-        try (InputStream is = DBConnection.class.getResourceAsStream("/dbconfig.properties")) {
+        try (InputStream is = DBConnection.class.getResourceAsStream("/resources/dbconfig.properties")) {
             if (is == null) {
                 throw new RuntimeException("❌ dbconfig.properties file not found in resources folder!");
             }
