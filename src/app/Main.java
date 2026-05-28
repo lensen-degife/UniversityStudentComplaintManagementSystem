@@ -1,81 +1,18 @@
 package app;
 
-import app.dao.ComplaintDAO;
-import app.model.Complaint;
+import app.ui.LoginFrame;
 
-import java.util.List;
-import java.util.Scanner;
+import javax.swing.*;
 
 public class Main {
     public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
-        boolean running = true;
-
-        System.out.println("=== University Student Complaint System (Console) ===");
-
-        while (running) {
-            System.out.println("\n1. Submit New Complaint");
-            System.out.println("2. View All Complaints");
-            System.out.println("3. Exit");
-            System.out.print("Choose option: ");
-
-            int choice = scanner.nextInt();
-            scanner.nextLine(); // consume newline
-
-            switch (choice) {
-                case 1:
-                    submitComplaint(scanner);
-                    break;
-                case 2:
-                    viewComplaints();
-                    break;
-                case 3:
-                    running = false;
-                    System.out.println("Goodbye!");
-                    break;
-                default:
-                    System.out.println("Invalid option!");
+        SwingUtilities.invokeLater(() -> {
+            try {
+                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            } catch (Exception ignored) {
+                // Fallback to default look and feel.
             }
-        }
-        scanner.close();
-    }
-
-    private static void submitComplaint(Scanner scanner) {
-        System.out.println("\n--- Submit Complaint ---");
-        System.out.print("Enter Student Name: ");
-        String studentName = scanner.nextLine();
-
-        System.out.print("Enter Category (Academic/Hostel/Admin/etc): ");
-        String category = scanner.nextLine();
-
-        System.out.print("Enter Description: ");
-        String description = scanner.nextLine();
-
-        Complaint complaint = new Complaint(studentName, category, description, "Pending");
-
-        boolean success = ComplaintDAO.addComplaint(complaint);
-        if (success) {
-            System.out.println("✅ Complaint submitted successfully!");
-        } else {
-            System.out.println("❌ Failed to submit complaint.");
-        }
-    }
-    private static void viewComplaints() {
-        System.out.println("\n--- All Complaints ---");
-        List<Complaint> complaints = ComplaintDAO.getAllComplaints();
-
-        if (complaints.isEmpty()) {
-            System.out.println("No complaints found.");
-            return;
-        }
-
-        for (Complaint c : complaints) {
-            System.out.println("ID          : " + c.getId());
-            System.out.println("Student     : " + c.getStudentName());
-            System.out.println("Category    : " + c.getCategory());
-            System.out.println("Description : " + c.getDescription());
-            System.out.println("Status      : " + c.getStatus());
-            System.out.println("-------------------------------");
-        }
+            new LoginFrame().setVisible(true);
+        });
     }
 }

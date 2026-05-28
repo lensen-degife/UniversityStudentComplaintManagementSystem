@@ -3,34 +3,33 @@ package app.db;
 import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.Properties;
 
 public class DBConnection {
 
-    private static Properties props = new Properties();
+    private static final Properties PROPERTIES = new Properties();
 
     static {
-        try (InputStream is = DBConnection.class.getResourceAsStream("/resources/dbconfig.properties")) {
-            if (is == null) {
-                throw new RuntimeException("❌ dbconfig.properties file not found in resources folder!");
+        try (InputStream inputStream = DBConnection.class.getResourceAsStream("/dbconfig.properties")) {
+            if (inputStream == null) {
+                throw new IllegalStateException("dbconfig.properties was not found on classpath");
             }
-            props.load(is);
-            System.out.println("✅ Database config loaded successfully.");
-        } catch (Exception e) {
-            e.printStackTrace();
+            PROPERTIES.load(inputStream);
+            Class.forName(PROPERTIES.getProperty("db.driver"));
+        } catch (Exception exception) {
+            throw new ExceptionInInitializerError("Failed to initialize database connection: " + exception.getMessage());
         }
     }
 
-    public static Connection getConnection() throws Exception {
-        String url = props.getProperty("db.url");
-        String user = props.getProperty("db.username");
-        String pass = props.getProperty("db.password");
+    private DBConnection() {
+    }
 
-        if (url == null || user == null || pass == null) {
-            throw new RuntimeException("❌ Database configuration is missing!");
-        }
-
-        Class.forName(props.getProperty("db.driver"));
-        return DriverManager.getConnection(url, user, pass);
+    public static Connection getConnection() throws SQLException {
+        return DriverManager.getConnection(
+                PROPERTIES.getProperty("db.url"),
+                PROPERTIES.getProperty("db.username"),
+                PROPERTIES.getProperty("db.password")
+        );
     }
 }

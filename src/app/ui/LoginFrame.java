@@ -1,38 +1,94 @@
 package app.ui;
 
+import app.model.Role;
+import app.model.User;
+import app.service.AuthService;
+
 import javax.swing.*;
+import java.awt.*;
+import java.util.Optional;
 
 public class LoginFrame extends JFrame {
 
+    private final JTextField emailField = new JTextField();
+    private final JPasswordField passwordField = new JPasswordField();
+    private final JComboBox<Role> roleCombo = new JComboBox<>(Role.values());
+    private final AuthService authService = new AuthService();
+
     public LoginFrame() {
-        setTitle("Login");
-        setSize(400,300);
+        setTitle("University Complaint Management - Login");
+        setSize(450, 280);
+        setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setLayout(null);
 
-        JLabel l1 = new JLabel("Username:");
-        l1.setBounds(20,20,80,25);
-        add(l1);
+        JPanel panel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(8, 8, 8, 8);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        JTextField t1 = new JTextField();
-        t1.setBounds(100,20,150,25);
-        add(t1);
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        panel.add(new JLabel("Email:"), gbc);
 
-        JLabel l2 = new JLabel("Password:");
-        l2.setBounds(20,60,80,25);
-        add(l2);
+        gbc.gridx = 1;
+        panel.add(emailField, gbc);
 
-        JPasswordField p1 = new JPasswordField();
-        p1.setBounds(100,60,150,25);
-        add(p1);
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        panel.add(new JLabel("Password:"), gbc);
 
-        JButton b1 = new JButton("Login");
-        b1.setBounds(100,100,100,30);
-        add(b1);
+        gbc.gridx = 1;
+        panel.add(passwordField, gbc);
 
-        b1.addActionListener(e -> {
-            new StudentDashboard().setVisible(true);
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        panel.add(new JLabel("Login as:"), gbc);
+
+        gbc.gridx = 1;
+        panel.add(roleCombo, gbc);
+
+        JButton loginButton = new JButton("Login");
+        loginButton.addActionListener(e -> login());
+
+        JButton registerButton = new JButton("Student Registration");
+        registerButton.addActionListener(e -> {
+            new RegisterFrame().setVisible(true);
             dispose();
         });
+
+        JPanel buttons = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        buttons.add(registerButton);
+        buttons.add(loginButton);
+
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        gbc.gridwidth = 2;
+        panel.add(buttons, gbc);
+
+        setContentPane(panel);
+    }
+
+    private void login() {
+        String email = emailField.getText().trim();
+        String password = new String(passwordField.getPassword());
+        Role role = (Role) roleCombo.getSelectedItem();
+
+        if (email.isBlank() || password.isBlank() || role == null) {
+            JOptionPane.showMessageDialog(this, "Please fill all login fields.", "Validation", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        Optional<User> user = authService.login(email, password, role);
+        if (user.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Invalid credentials or role.", "Login Failed", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        if (role == Role.STUDENT) {
+            new StudentDashboard(user.get()).setVisible(true);
+        } else {
+            new AdminDashboard(user.get()).setVisible(true);
+        }
+        dispose();
     }
 }
