@@ -17,7 +17,7 @@ public class LoginFrame extends JFrame {
 
     public LoginFrame() {
         setTitle("University Complaint Management - Login");
-        setSize(450, 280);
+        setSize(650, 500);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
 

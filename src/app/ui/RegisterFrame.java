@@ -16,7 +16,7 @@ public class RegisterFrame extends JFrame {
 
     public RegisterFrame() {
         setTitle("Student Registration");
-        setSize(500, 360);
+        setSize(600, 560);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
 
