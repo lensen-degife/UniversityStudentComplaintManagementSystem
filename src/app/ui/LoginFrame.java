@@ -3,7 +3,6 @@ package app.ui;
 import app.model.Role;
 import app.model.User;
 import app.service.AuthService;
-
 import javax.swing.*;
 import java.awt.*;
 import java.util.Optional;
@@ -17,8 +16,14 @@ public class LoginFrame extends JFrame {
 
     private final AuthService authService = new AuthService();
 
+    // Reference to RegisterFrame for smooth switching
+    private final RegisterFrame registerFrame;
+
     public LoginFrame() {
-        // Set Look and Feel for better color support on Ubuntu
+        // Store reference to RegisterFrame
+        this.registerFrame = new RegisterFrame(this);
+
+        // Set Look and Feel
         try {
             UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
         } catch (Exception e) {
@@ -30,21 +35,22 @@ public class LoginFrame extends JFrame {
         }
 
         setTitle("University Complaint Management - Login");
-        setSize(670, 600);                    // Slightly increased height
+        setSize(670, 600);
         setLocationRelativeTo(null);
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setDefaultCloseOperation(HIDE_ON_CLOSE);   // Changed for better switching
 
         JPanel mainPanel = new JPanel();
         mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
         mainPanel.setBorder(BorderFactory.createEmptyBorder(40, 50, 40, 50));
         mainPanel.setBackground(new Color(245, 247, 252));
 
-        // Title - Larger font
+        // Title
         JLabel titleLabel = new JLabel("Login");
         titleLabel.setFont(new Font("Arial", Font.BOLD, 32));
         titleLabel.setForeground(new Color(0, 51, 102));
         titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
+        // Form Panel
         JPanel formPanel = new JPanel();
         formPanel.setLayout(new BoxLayout(formPanel, BoxLayout.Y_AXIS));
         formPanel.setBorder(BorderFactory.createEmptyBorder(30, 0, 30, 0));
@@ -69,14 +75,12 @@ public class LoginFrame extends JFrame {
         styleButton(registerButton, new Color(70, 130, 180));
 
         loginButton.addActionListener(e -> login());
-        registerButton.addActionListener(e -> {
-            new RegisterFrame().setVisible(true);
-            dispose();
-        });
+        registerButton.addActionListener(e -> switchToRegister());
 
         buttonPanel.add(registerButton);
         buttonPanel.add(loginButton);
 
+        // Assemble main panel
         mainPanel.add(titleLabel);
         mainPanel.add(Box.createVerticalStrut(30));
         mainPanel.add(formPanel);
@@ -89,12 +93,23 @@ public class LoginFrame extends JFrame {
         showPasswordCheck.setBackground(new Color(245, 247, 252));
         showPasswordCheck.setFont(new Font("Arial", Font.PLAIN, 15));
         showPasswordCheck.addActionListener(e -> {
-            if (showPasswordCheck.isSelected()) {
-                passwordField.setEchoChar((char) 0);
-            } else {
-                passwordField.setEchoChar('•');
-            }
+            char echo = showPasswordCheck.isSelected() ? (char) 0 : '•';
+            passwordField.setEchoChar(echo);
         });
+    }
+
+    private void switchToRegister() {
+        clearFields();               // Clear login form
+        setVisible(false);           // Hide LoginFrame
+        registerFrame.setVisible(true); // Show RegisterFrame
+    }
+
+    void clearFields() {
+        emailField.setText("");
+        passwordField.setText("");
+        showPasswordCheck.setSelected(false);
+        passwordField.setEchoChar('•');
+        roleCombo.setSelectedIndex(0);
     }
 
     private JPanel createLabelFieldPanel(String labelText, JComponent field) {
@@ -103,11 +118,11 @@ public class LoginFrame extends JFrame {
 
         JLabel label = new JLabel(labelText);
         label.setPreferredSize(new Dimension(120, 28));
-        label.setFont(new Font("Arial", Font.PLAIN, 16));        // Increased
+        label.setFont(new Font("Arial", Font.PLAIN, 16));
         label.setForeground(new Color(50, 50, 50));
 
-        field.setMaximumSize(new Dimension(400, 38));            // Increased height
-        field.setFont(new Font("Arial", Font.PLAIN, 16));        // Increased
+        field.setMaximumSize(new Dimension(400, 38));
+        field.setFont(new Font("Arial", Font.PLAIN, 16));
 
         panel.add(label, BorderLayout.WEST);
         panel.add(field, BorderLayout.CENTER);
@@ -136,7 +151,7 @@ public class LoginFrame extends JFrame {
         button.setBackground(color);
         button.setForeground(Color.WHITE);
         button.setFocusPainted(false);
-        button.setFont(new Font("Arial", Font.BOLD, 16));       // Increased
+        button.setFont(new Font("Arial", Font.BOLD, 16));
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
     }
 
@@ -159,11 +174,13 @@ public class LoginFrame extends JFrame {
             return;
         }
 
+        // Open dashboard
         if (role == Role.STUDENT) {
             new StudentDashboard(user.get()).setVisible(true);
         } else {
-            new AdminDashboard(user.get()).setVisible(true);
+            new AdminDashboard(user.get(), this).setVisible(true);
         }
-        dispose();
+
+        setVisible(false);   // Hide login frame after successful login
     }
 }

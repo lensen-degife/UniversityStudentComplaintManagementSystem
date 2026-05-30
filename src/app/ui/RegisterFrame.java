@@ -16,11 +16,16 @@ public class RegisterFrame extends JFrame {
 
     private final AuthService authService = new AuthService();
 
-    public RegisterFrame() {
+    // Reference to LoginFrame for smooth switching
+    private final LoginFrame loginFrame;
+
+    public RegisterFrame(LoginFrame loginFrame) {
+        this.loginFrame = loginFrame;
+
         setTitle("Student Registration");
         setSize(670, 600);
         setLocationRelativeTo(null);
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setDefaultCloseOperation(HIDE_ON_CLOSE);   // Changed to HIDE_ON_CLOSE
 
         // Main panel with BoxLayout (vertical)
         JPanel mainPanel = new JPanel();
@@ -31,24 +36,19 @@ public class RegisterFrame extends JFrame {
         addField(mainPanel, "Full Name:", fullNameField);
         addField(mainPanel, "Email:", emailField);
         addField(mainPanel, "Department:", departmentField);
-
         addPasswordFieldWithToggle(mainPanel);
-
         addField(mainPanel, "Confirm Password:", confirmPasswordField);
 
         // Button Panel
         JButton backButton = new JButton("Back to Login");
-        backButton.addActionListener(e -> {
-            new LoginFrame().setVisible(true);
-            dispose();
-        });
-
         JButton registerButton = new JButton("Register");
+
+        backButton.addActionListener(e -> switchToLogin());
         registerButton.addActionListener(e -> register());
 
         // Style buttons
         styleButton(registerButton, new Color(0, 123, 255), Color.WHITE); // Blue
-        styleButton(backButton, new Color(108, 117, 125), Color.WHITE);  // Gray
+        styleButton(backButton, new Color(108, 117, 125), Color.WHITE);   // Gray
 
         JPanel buttonPanel = new JPanel();
         buttonPanel.setLayout(new FlowLayout(FlowLayout.CENTER));
@@ -60,6 +60,23 @@ public class RegisterFrame extends JFrame {
         mainPanel.add(buttonPanel);
 
         setContentPane(mainPanel);
+    }
+
+    private void switchToLogin() {
+        clearFields();           // Clear the form
+        setVisible(false);       // Hide this frame
+        loginFrame.setVisible(true);  // Show Login frame
+    }
+
+    private void clearFields() {
+        fullNameField.setText("");
+        emailField.setText("");
+        departmentField.setText("");
+        passwordField.setText("");
+        confirmPasswordField.setText("");
+        showPasswordCheck.setSelected(false);
+        passwordField.setEchoChar('•');
+        confirmPasswordField.setEchoChar('•');
     }
 
     private void addField(JPanel panel, String labelText, JComponent field) {
@@ -83,13 +100,11 @@ public class RegisterFrame extends JFrame {
         label.setFont(new Font("Arial", Font.BOLD, 14));
         label.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // Increased height
         passwordField.setMaximumSize(new Dimension(480, 50));
         passwordField.setPreferredSize(new Dimension(480, 50));
         passwordField.setFont(new Font("Arial", Font.PLAIN, 15));
         passwordField.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // Show Password Checkbox
         showPasswordCheck.setFont(new Font("Arial", Font.PLAIN, 15));
         showPasswordCheck.setAlignmentX(Component.CENTER_ALIGNMENT);
         showPasswordCheck.setBackground(null);
@@ -139,8 +154,7 @@ public class RegisterFrame extends JFrame {
 
         if (registered) {
             JOptionPane.showMessageDialog(this, "Registration successful. Please login.");
-            new LoginFrame().setVisible(true);
-            dispose();
+            switchToLogin();                    // Better switching
         } else {
             JOptionPane.showMessageDialog(this, "Email already exists or registration failed.", "Error", JOptionPane.ERROR_MESSAGE);
         }
