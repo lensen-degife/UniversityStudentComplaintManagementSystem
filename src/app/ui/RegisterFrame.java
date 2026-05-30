@@ -1,36 +1,42 @@
 package app.ui;
 
 import app.service.AuthService;
-
 import javax.swing.*;
 import java.awt.*;
 
 public class RegisterFrame extends JFrame {
 
-    private final JTextField fullNameField = new JTextField();
-    private final JTextField emailField = new JTextField();
-    private final JTextField departmentField = new JTextField();
-    private final JPasswordField passwordField = new JPasswordField();
-    private final JPasswordField confirmPasswordField = new JPasswordField();
+    private final JTextField fullNameField = new JTextField(25);
+    private final JTextField emailField = new JTextField(25);
+    private final JTextField departmentField = new JTextField(25);
+    private final JPasswordField passwordField = new JPasswordField(25);
+    private final JPasswordField confirmPasswordField = new JPasswordField(25);
+
+    private final JCheckBox showPasswordCheck = new JCheckBox("Show Password");
+
     private final AuthService authService = new AuthService();
 
     public RegisterFrame() {
         setTitle("Student Registration");
-        setSize(600, 560);
+        setSize(670, 600);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
 
-        JPanel panel = new JPanel(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(7, 7, 7, 7);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
+        // Main panel with BoxLayout (vertical)
+        JPanel mainPanel = new JPanel();
+        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(40, 50, 40, 50));
 
-        addField(panel, gbc, 0, "Full Name:", fullNameField);
-        addField(panel, gbc, 1, "Email:", emailField);
-        addField(panel, gbc, 2, "Department:", departmentField);
-        addField(panel, gbc, 3, "Password:", passwordField);
-        addField(panel, gbc, 4, "Confirm Password:", confirmPasswordField);
+        // Add fields
+        addField(mainPanel, "Full Name:", fullNameField);
+        addField(mainPanel, "Email:", emailField);
+        addField(mainPanel, "Department:", departmentField);
 
+        addPasswordFieldWithToggle(mainPanel);
+
+        addField(mainPanel, "Confirm Password:", confirmPasswordField);
+
+        // Button Panel
         JButton backButton = new JButton("Back to Login");
         backButton.addActionListener(e -> {
             new LoginFrame().setVisible(true);
@@ -40,26 +46,76 @@ public class RegisterFrame extends JFrame {
         JButton registerButton = new JButton("Register");
         registerButton.addActionListener(e -> register());
 
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        // Style buttons
+        styleButton(registerButton, new Color(0, 123, 255), Color.WHITE); // Blue
+        styleButton(backButton, new Color(108, 117, 125), Color.WHITE);  // Gray
+
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setLayout(new FlowLayout(FlowLayout.CENTER));
+        buttonPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
         buttonPanel.add(backButton);
         buttonPanel.add(registerButton);
 
-        gbc.gridx = 0;
-        gbc.gridy = 5;
-        gbc.gridwidth = 2;
-        panel.add(buttonPanel, gbc);
+        mainPanel.add(Box.createVerticalStrut(35));
+        mainPanel.add(buttonPanel);
 
-        setContentPane(panel);
+        setContentPane(mainPanel);
     }
 
-    private void addField(JPanel panel, GridBagConstraints gbc, int row, String label, JComponent field) {
-        gbc.gridx = 0;
-        gbc.gridy = row;
-        gbc.gridwidth = 1;
-        panel.add(new JLabel(label), gbc);
+    private void addField(JPanel panel, String labelText, JComponent field) {
+        JLabel label = new JLabel(labelText);
+        label.setFont(new Font("Arial", Font.BOLD, 14));
+        label.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        gbc.gridx = 1;
-        panel.add(field, gbc);
+        field.setMaximumSize(new Dimension(480, 50));
+        field.setPreferredSize(new Dimension(480, 50));
+        field.setFont(new Font("Arial", Font.PLAIN, 15));
+        field.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        panel.add(Box.createVerticalStrut(12));
+        panel.add(label);
+        panel.add(Box.createVerticalStrut(6));
+        panel.add(field);
+    }
+
+    private void addPasswordFieldWithToggle(JPanel panel) {
+        JLabel label = new JLabel("Password:");
+        label.setFont(new Font("Arial", Font.BOLD, 14));
+        label.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        // Increased height
+        passwordField.setMaximumSize(new Dimension(480, 50));
+        passwordField.setPreferredSize(new Dimension(480, 50));
+        passwordField.setFont(new Font("Arial", Font.PLAIN, 15));
+        passwordField.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        // Show Password Checkbox
+        showPasswordCheck.setFont(new Font("Arial", Font.PLAIN, 15));
+        showPasswordCheck.setAlignmentX(Component.CENTER_ALIGNMENT);
+        showPasswordCheck.setBackground(null);
+        showPasswordCheck.setFocusPainted(false);
+
+        showPasswordCheck.addActionListener(e -> {
+            char echoChar = showPasswordCheck.isSelected() ? (char) 0 : '•';
+            passwordField.setEchoChar(echoChar);
+            confirmPasswordField.setEchoChar(echoChar);
+        });
+
+        panel.add(Box.createVerticalStrut(12));
+        panel.add(label);
+        panel.add(Box.createVerticalStrut(6));
+        panel.add(passwordField);
+        panel.add(Box.createVerticalStrut(8));
+        panel.add(showPasswordCheck);
+    }
+
+    private void styleButton(JButton button, Color bgColor, Color fgColor) {
+        button.setBackground(bgColor);
+        button.setForeground(fgColor);
+        button.setFocusPainted(false);
+        button.setFont(new Font("Arial", Font.BOLD, 13));
+        button.setPreferredSize(new Dimension(140, 42));
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
     }
 
     private void register() {
@@ -80,6 +136,7 @@ public class RegisterFrame extends JFrame {
         }
 
         boolean registered = authService.registerStudent(fullName, email, password, department);
+
         if (registered) {
             JOptionPane.showMessageDialog(this, "Registration successful. Please login.");
             new LoginFrame().setVisible(true);
