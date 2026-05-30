@@ -26,7 +26,7 @@ public class AdminDashboard extends JFrame {
     private final JLabel rejectedLabel = new JLabel("Rejected: 0");
 
     private final JTextField searchField = new JTextField(20);
-    private final JComboBox<String> statusFilter = new JComboBox<>(new String[]{"ALL", "PENDING", "IN_PROGRESS", "RESOLVED", "REJECTED"});
+    private final JComboBox<ComplaintStatus> statusFilter = new JComboBox<>(ComplaintStatus.values());
     private final JTextField fromDateField = new JTextField(10);
     private final JTextField toDateField = new JTextField(10);
 
