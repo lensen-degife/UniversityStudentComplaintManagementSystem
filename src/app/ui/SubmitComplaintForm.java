@@ -23,44 +23,75 @@ public class SubmitComplaintForm extends JPanel {
         this.complaintDAO = complaintDAO;
 
         setLayout(new BorderLayout(10, 10));
+        setBorder(BorderFactory.createEmptyBorder(16, 16, 16, 16));
+        setBackground(UiTheme.BACKGROUND);
 
         JPanel formPanel = new JPanel(new GridBagLayout());
+        formPanel.setBackground(UiTheme.BACKGROUND);
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(8, 8, 8, 8);
         gbc.fill = GridBagConstraints.HORIZONTAL;
-
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        formPanel.add(new JLabel("Title:"), gbc);
+        gbc.weightx = 1.0;
         gbc.gridx = 1;
+
+        gbc.gridy = 0;
+        gbc.weighty = 0;
+        gbc.gridx = 0;
+        gbc.weightx = 0;
+        formPanel.add(createLabel("Title:"), gbc);
+        gbc.gridx = 1;
+        gbc.weightx = 1.0;
         formPanel.add(titleField, gbc);
 
-        gbc.gridx = 0;
         gbc.gridy = 1;
-        formPanel.add(new JLabel("Category:"), gbc);
+        gbc.gridx = 0;
+        gbc.weightx = 0;
+        formPanel.add(createLabel("Category:"), gbc);
         gbc.gridx = 1;
+        gbc.weightx = 1.0;
         formPanel.add(categoryCombo, gbc);
 
-        gbc.gridx = 0;
         gbc.gridy = 2;
-        gbc.anchor = GridBagConstraints.NORTHWEST;
-        formPanel.add(new JLabel("Description:"), gbc);
-        gbc.gridx = 1;
-        JScrollPane descriptionScroll = new JScrollPane(descriptionArea);
-        formPanel.add(descriptionScroll, gbc);
-
         gbc.gridx = 0;
-        gbc.gridy = 3;
-        gbc.anchor = GridBagConstraints.CENTER;
-        formPanel.add(new JLabel("Attachment Path (optional):"), gbc);
+        gbc.weightx = 0;
+        gbc.anchor = GridBagConstraints.NORTHWEST;
+        formPanel.add(createLabel("Description:"), gbc);
         gbc.gridx = 1;
+        gbc.weightx = 1.0;
+        gbc.weighty = 1.0;
+        gbc.fill = GridBagConstraints.BOTH;
+        descriptionArea.setLineWrap(true);
+        descriptionArea.setWrapStyleWord(true);
+        formPanel.add(new JScrollPane(descriptionArea), gbc);
+
+        gbc.gridy = 3;
+        gbc.gridx = 0;
+        gbc.weightx = 0;
+        gbc.weighty = 0;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.anchor = GridBagConstraints.CENTER;
+        formPanel.add(createLabel("Attachment Path (optional):"), gbc);
+        gbc.gridx = 1;
+        gbc.weightx = 1.0;
         formPanel.add(attachmentField, gbc);
 
         JButton submitButton = new JButton("Submit Complaint");
+        UiTheme.stylePrimaryButton(submitButton);
         submitButton.addActionListener(e -> submit());
 
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        buttonPanel.setBackground(UiTheme.BACKGROUND);
+        buttonPanel.add(submitButton);
+
         add(formPanel, BorderLayout.CENTER);
-        add(submitButton, BorderLayout.SOUTH);
+        add(buttonPanel, BorderLayout.SOUTH);
+    }
+
+    private JLabel createLabel(String text) {
+        JLabel label = new JLabel(text);
+        label.setFont(UiTheme.LABEL_FONT);
+        label.setForeground(UiTheme.TEXT);
+        return label;
     }
 
     private void submit() {

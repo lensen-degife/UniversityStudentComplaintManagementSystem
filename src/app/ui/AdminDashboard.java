@@ -26,7 +26,7 @@ public class AdminDashboard extends JFrame {
     private final JLabel rejectedLabel = new JLabel("Rejected: 0");
 
     private final JTextField searchField = new JTextField(20);
-    private final JComboBox<ComplaintStatus> statusFilter = new JComboBox<>(ComplaintStatus.values());
+    private final JComboBox<String> statusFilter = new JComboBox<>(createStatusFilterOptions());
     private final JTextField fromDateField = new JTextField(10);
     private final JTextField toDateField = new JTextField(10);
 
@@ -41,7 +41,8 @@ public class AdminDashboard extends JFrame {
         this.loginFrame = loginFrame;
 
         setTitle("Admin Dashboard - " + admin.getFullName());
-        setSize(1150, 700);                    // Slightly larger
+        setMinimumSize(new Dimension(900, 560));
+        setSize(1150, 700);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(HIDE_ON_CLOSE);
 
@@ -63,6 +64,7 @@ public class AdminDashboard extends JFrame {
         // Stats Panel
         JPanel statsPanel = new JPanel(new GridLayout(1, 5, 12, 8));
         statsPanel.setBackground(Color.WHITE);
+        statsPanel.setPreferredSize(new Dimension(0, 56));
 
         styleStatLabel(totalLabel, new Color(0, 51, 102));
         styleStatLabel(pendingLabel, new Color(255, 140, 0));
@@ -200,9 +202,19 @@ public class AdminDashboard extends JFrame {
         }
     }
 
+    private static String[] createStatusFilterOptions() {
+        ComplaintStatus[] statuses = ComplaintStatus.values();
+        String[] options = new String[statuses.length + 1];
+        options[0] = "ALL";
+        for (int i = 0; i < statuses.length; i++) {
+            options[i + 1] = statuses[i].name();
+        }
+        return options;
+    }
+
     private void clearFilters() {
         searchField.setText("");
-        statusFilter.setSelectedItem("ALL");
+        statusFilter.setSelectedIndex(0);
         fromDateField.setText("");
         toDateField.setText("");
         loadComplaints();

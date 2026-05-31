@@ -13,18 +13,21 @@ import java.util.List;
 public class StudentDashboard extends JFrame {
 
     private final User student;
+    private final LoginFrame loginFrame;
     private final ComplaintDAO complaintDAO = new ComplaintDAO();
     private final ComplaintResponseDAO responseDAO = new ComplaintResponseDAO();
     private final DefaultTableModel tableModel = new DefaultTableModel(new Object[]{"ID", "Title", "Category", "Status", "Submitted"}, 0);
     private final JTable complaintTable = new JTable(tableModel);
 
-    public StudentDashboard(User student) {
+    public StudentDashboard(User student, LoginFrame loginFrame) {
         this.student = student;
+        this.loginFrame = loginFrame;
 
         setTitle("Student Dashboard - " + student.getFullName());
+        setMinimumSize(new Dimension(720, 480));
         setSize(900, 550);
         setLocationRelativeTo(null);
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setDefaultCloseOperation(HIDE_ON_CLOSE);
 
         JTabbedPane tabbedPane = new JTabbedPane();
         tabbedPane.addTab("Submit Complaint", new SubmitComplaintForm(student, complaintDAO));
@@ -43,10 +46,7 @@ public class StudentDashboard extends JFrame {
         panel.add(new JLabel("Welcome, " + student.getFullName()), BorderLayout.WEST);
 
         JButton logoutButton = new JButton("Logout");
-        logoutButton.addActionListener(e -> {
-            new LoginFrame().setVisible(true);
-            dispose();
-        });
+        logoutButton.addActionListener(e -> logout());
         panel.add(logoutButton, BorderLayout.EAST);
         return panel;
     }
@@ -83,6 +83,18 @@ public class StudentDashboard extends JFrame {
                     complaint.getStatus(),
                     complaint.getSubmittedAt()
             });
+        }
+    }
+
+    private void logout() {
+        int confirm = JOptionPane.showConfirmDialog(this,
+                "Are you sure you want to logout?", "Confirm Logout",
+                JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            setVisible(false);
+            loginFrame.clearFields();
+            loginFrame.setVisible(true);
         }
     }
 
