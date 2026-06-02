@@ -26,7 +26,7 @@ public class ComplaintDetailsFrame extends JFrame {
     private final JLabel studentLabel = new JLabel();
     private final JTextArea descriptionArea = new JTextArea();
 
-    private final DefaultTableModel responseModel = new DefaultTableModel(new Object[]{"Responder", "Message", "Time"}, 0);
+    private final DefaultTableModel responseModel = new DefaultTableModel(new Object[]{"Sender Name", "Message Text", "Timestamp Record"}, 0);
     private final JTable responseTable = new JTable(responseModel);
 
     public ComplaintDetailsFrame(User currentUser, Complaint complaint, boolean adminView,
@@ -38,12 +38,13 @@ public class ComplaintDetailsFrame extends JFrame {
         this.responseDAO = responseDAO;
         this.onUpdated = onUpdated;
 
-        setTitle("Complaint Details #" + complaint.getId());
-        setSize(850, 600);
+        setTitle("Incident Ledger Ticket View — #" + complaint.getId());
+        setSize(950, 700);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        getContentPane().setBackground(UiTheme.APP_BACKGROUND);
 
-        setLayout(new BorderLayout(8, 8));
+        setLayout(new BorderLayout(0, 16));
         add(createHeaderPanel(), BorderLayout.NORTH);
         add(createBodyPanel(), BorderLayout.CENTER);
         add(createActionPanel(), BorderLayout.SOUTH);
@@ -53,96 +54,152 @@ public class ComplaintDetailsFrame extends JFrame {
     }
 
     private JPanel createHeaderPanel() {
-        JPanel panel = new JPanel(new GridLayout(2, 2, 8, 8));
-        panel.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
-        panel.add(studentLabel);
-        panel.add(categoryLabel);
-        panel.add(new JLabel("Title: " + complaint.getTitle()));
-        panel.add(statusLabel);
-        return panel;
+        JPanel block = new JPanel(new GridLayout(2, 2, 16, 12));
+        block.setBackground(UiTheme.CARD_BACKGROUND);
+        block.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createMatteBorder(0, 0, 1, 0, UiTheme.BORDER_COLOR),
+                BorderFactory.createEmptyBorder(16, 20, 16, 20)
+        ));
+
+        setupHeaderLabel(studentLabel);
+        setupHeaderLabel(categoryLabel);
+        setupHeaderLabel(statusLabel);
+
+        JLabel titleLabel = new JLabel("Topic Title: " + complaint.getTitle());
+        setupHeaderLabel(titleLabel);
+
+        block.add(studentLabel);
+        block.add(categoryLabel);
+        block.add(titleLabel);
+        block.add(statusLabel);
+        return block;
+    }
+
+    private void setupHeaderLabel(JLabel lbl) {
+        lbl.setFont(UiTheme.HEADER_FONT);
+        lbl.setForeground(UiTheme.PRIMARY);
     }
 
     private JPanel createBodyPanel() {
-        JPanel panel = new JPanel(new GridLayout(2, 1, 8, 8));
-        panel.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
+        JPanel mainSplitGrid = new JPanel(new GridLayout(1, 2, 20, 0));
+        mainSplitGrid.setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 20));
+        mainSplitGrid.setBackground(UiTheme.APP_BACKGROUND);
+
+        // Description Panel Wrapper Card
+        JPanel leftCard = new JPanel(new BorderLayout(0, 8));
+        leftCard.setBackground(UiTheme.CARD_BACKGROUND);
+        leftCard.setBorder(BorderFactory.createCompoundBorder(
+                new UiTheme.RoundedBorder(12, UiTheme.BORDER_COLOR),
+                BorderFactory.createEmptyBorder(16, 16, 16, 16)
+        ));
+        JLabel leftTitle = new JLabel("Original Complaint Details Log");
+        leftTitle.setFont(UiTheme.HEADER_FONT);
+        leftCard.add(leftTitle, BorderLayout.NORTH);
 
         descriptionArea.setEditable(false);
         descriptionArea.setLineWrap(true);
         descriptionArea.setWrapStyleWord(true);
+        descriptionArea.setFont(UiTheme.FIELD_FONT);
+        descriptionArea.setBorder(BorderFactory.createEmptyBorder(6, 6, 6, 6));
+        JScrollPane descScroll = new JScrollPane(descriptionArea);
+        descScroll.setBorder(new UiTheme.RoundedBorder(8, UiTheme.BORDER_COLOR));
+        leftCard.add(descScroll, BorderLayout.CENTER);
 
-        JPanel descriptionPanel = new JPanel(new BorderLayout());
-        descriptionPanel.add(new JLabel("Description"), BorderLayout.NORTH);
-        descriptionPanel.add(new JScrollPane(descriptionArea), BorderLayout.CENTER);
+        // Response History Wrapper Card
+        JPanel rightCard = new JPanel(new BorderLayout(0, 8));
+        rightCard.setBackground(UiTheme.CARD_BACKGROUND);
+        rightCard.setBorder(BorderFactory.createCompoundBorder(
+                new UiTheme.RoundedBorder(12, UiTheme.BORDER_COLOR),
+                BorderFactory.createEmptyBorder(16, 16, 16, 16)
+        ));
+        JLabel rightTitle = new JLabel("Official Response Timeline Thread");
+        rightTitle.setFont(UiTheme.HEADER_FONT);
+        rightCard.add(rightTitle, BorderLayout.NORTH);
 
-        JPanel responsePanel = new JPanel(new BorderLayout());
-        responsePanel.add(new JLabel("Responses"), BorderLayout.NORTH);
-        responsePanel.add(new JScrollPane(responseTable), BorderLayout.CENTER);
+        UiTheme.styleTable(responseTable);
+        JScrollPane tableScroll = new JScrollPane(responseTable);
+        tableScroll.setBorder(BorderFactory.createLineBorder(UiTheme.BORDER_COLOR));
+        rightCard.add(tableScroll, BorderLayout.CENTER);
 
-        panel.add(descriptionPanel);
-        panel.add(responsePanel);
-        return panel;
+        mainSplitGrid.add(leftCard);
+        mainSplitGrid.add(rightCard);
+        return mainSplitGrid;
     }
 
     private JPanel createActionPanel() {
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        JPanel utilityTray = new JPanel(new FlowLayout(FlowLayout.RIGHT, 14, 12));
+        utilityTray.setBackground(UiTheme.CARD_BACKGROUND);
+        utilityTray.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createMatteBorder(1, 0, 0, 0, UiTheme.BORDER_COLOR),
+                BorderFactory.createEmptyBorder(4, 20, 4, 20)
+        ));
 
-        JTextField responseField = new JTextField(30);
-        panel.add(responseField);
+        JTextField responseField = new JTextField();
+        responseField.setPreferredSize(new Dimension(280, 38));
+        responseField.setFont(UiTheme.FIELD_FONT);
+        responseField.setBorder(BorderFactory.createCompoundBorder(
+                new UiTheme.RoundedBorder(6, UiTheme.BORDER_COLOR),
+                BorderFactory.createEmptyBorder(0, 8, 0, 8)
+        ));
+        utilityTray.add(responseField);
 
-        JButton addResponseButton = new JButton("Add Response");
+        JButton addResponseButton = new JButton("Post Reply");
+        UiTheme.stylePrimaryButton(addResponseButton);
+        addResponseButton.setPreferredSize(new Dimension(120, 38));
         addResponseButton.addActionListener(e -> {
             String message = responseField.getText().trim();
             if (message.isBlank()) {
-                JOptionPane.showMessageDialog(this, "Response message is required.");
+                JOptionPane.showMessageDialog(this, "Please enter message characters to submit response logs.", "Input Required", JOptionPane.WARNING_MESSAGE);
                 return;
             }
-
-            ComplaintResponse response = new ComplaintResponse(complaint.getId(), currentUser.getId(), message);
-            boolean added = responseDAO.addResponse(response);
-            if (added) {
+            ComplaintResponse res = new ComplaintResponse(complaint.getId(), currentUser.getId(), message);
+            if (responseDAO.addResponse(res)) {
                 responseField.setText("");
                 loadResponses();
             } else {
-                JOptionPane.showMessageDialog(this, "Failed to add response.", "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Failed to submit message to the system thread.", "Database Sync Error", JOptionPane.ERROR_MESSAGE);
             }
         });
-        panel.add(addResponseButton);
+        utilityTray.add(addResponseButton);
 
         if (adminView) {
             JComboBox<ComplaintStatus> statusCombo = new JComboBox<>(ComplaintStatus.values());
+            statusCombo.setFont(UiTheme.FIELD_FONT);
+            statusCombo.setPreferredSize(new Dimension(140, 38));
             statusCombo.setSelectedItem(complaint.getStatus());
-            panel.add(statusCombo);
+            utilityTray.add(statusCombo);
 
-            JButton updateStatusButton = new JButton("Update Status");
+            JButton updateStatusButton = new JButton("Modify Status");
+            UiTheme.styleSecondaryButton(updateStatusButton);
+            updateStatusButton.setPreferredSize(new Dimension(135, 38));
             updateStatusButton.addActionListener(e -> {
                 ComplaintStatus status = (ComplaintStatus) statusCombo.getSelectedItem();
-                if (status == null) {
-                    return;
-                }
-                boolean updated = complaintDAO.updateStatus(complaint.getId(), status);
-                if (updated) {
+                if (status == null) return;
+                if (complaintDAO.updateStatus(complaint.getId(), status)) {
                     complaint = complaintDAO.getById(complaint.getId());
                     loadComplaintDetails();
                     onUpdated.run();
                 } else {
-                    JOptionPane.showMessageDialog(this, "Failed to update status.", "Error", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(this, "Could not persist state modifications across database tables.", "Persistence Error", JOptionPane.ERROR_MESSAGE);
                 }
             });
-            panel.add(updateStatusButton);
+            utilityTray.add(updateStatusButton);
         }
 
-        JButton closeButton = new JButton("Close");
+        JButton closeButton = new JButton("Exit View");
+        UiTheme.styleMutedButton(closeButton);
+        closeButton.setPreferredSize(new Dimension(110, 38));
         closeButton.addActionListener(e -> dispose());
-        panel.add(closeButton);
+        utilityTray.add(closeButton);
 
-        return panel;
+        return utilityTray;
     }
 
     private void loadComplaintDetails() {
-        studentLabel.setText("Student: " + complaint.getStudentName());
-        categoryLabel.setText("Category: " + complaint.getCategory());
-        statusLabel.setText("Status: " + complaint.getStatus());
-        descriptionArea.setText(complaint.getDescription() + (complaint.getAttachmentPath() == null ? "" : "\n\nAttachment: " + complaint.getAttachmentPath()));
+        studentLabel.setText("Student Account: " + complaint.getStudentName());
+        categoryLabel.setText("Classification: " + complaint.getCategory());
+        statusLabel.setText("Workflow State: " + complaint.getStatus());
+        descriptionArea.setText(complaint.getDescription() + (complaint.getAttachmentPath() == null ? "" : "\n\n========================================\nDocument Attachment Reference Path:\n" + complaint.getAttachmentPath()));
     }
 
     private void loadResponses() {

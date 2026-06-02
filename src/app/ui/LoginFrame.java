@@ -19,34 +19,40 @@ public class LoginFrame extends JFrame {
     private final RegisterFrame registerFrame;
 
     public LoginFrame() {
+        UiTheme.applyLookAndFeel();
         this.registerFrame = new RegisterFrame(this);
 
-        UiTheme.configureAuthFrame(this, "University Complaint Management - Login");
+        UiTheme.configureAuthFrame(this, "University Portal - Login");
 
         JPanel formPanel = new JPanel();
         formPanel.setLayout(new BoxLayout(formPanel, BoxLayout.Y_AXIS));
-        formPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 20, 0));
 
-        formPanel.add(UiTheme.createFormRow("Email:", emailField));
-        formPanel.add(Box.createVerticalStrut(16));
-        formPanel.add(UiTheme.createFormRow("Password:", passwordField));
-        formPanel.add(Box.createVerticalStrut(8));
+        formPanel.add(UiTheme.createFormRow("Email Address", emailField));
+        formPanel.add(Box.createVerticalStrut(14));
+        formPanel.add(UiTheme.createFormRow("Password", passwordField));
+        formPanel.add(Box.createVerticalStrut(6));
 
-        showPasswordCheck.setBackground(UiTheme.BACKGROUND);
-        showPasswordCheck.setFont(UiTheme.LABEL_FONT);
+        showPasswordCheck.setBackground(UiTheme.CARD_BACKGROUND);
+        showPasswordCheck.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        showPasswordCheck.setForeground(UiTheme.MUTED);
+        showPasswordCheck.setFocusPainted(false);
         showPasswordCheck.setAlignmentX(Component.LEFT_ALIGNMENT);
         showPasswordCheck.addActionListener(e -> {
-            char echo = showPasswordCheck.isSelected() ? (char) 0 : '•';
-            passwordField.setEchoChar(echo);
+            passwordField.setEchoChar(showPasswordCheck.isSelected() ? (char) 0 : '•');
         });
-        formPanel.add(showPasswordCheck);
-        formPanel.add(Box.createVerticalStrut(16));
-        formPanel.add(UiTheme.createFormRow("Login as:", roleCombo));
 
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 25, 0));
+        JPanel checkWrapper = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        checkWrapper.setBackground(UiTheme.CARD_BACKGROUND);
+        checkWrapper.add(showPasswordCheck);
+        formPanel.add(checkWrapper);
 
-        JButton registerButton = new JButton("Register");
-        JButton loginButton = new JButton("Login");
+        formPanel.add(Box.createVerticalStrut(14));
+        formPanel.add(UiTheme.createFormRow("Portal Role", roleCombo));
+
+        JPanel buttonPanel = new JPanel(new GridLayout(1, 2, 16, 0));
+        JButton registerButton = new JButton("Create Account");
+        JButton loginButton = new JButton("Sign In");
+
         UiTheme.styleSecondaryButton(registerButton);
         UiTheme.stylePrimaryButton(loginButton);
 
@@ -56,7 +62,7 @@ public class LoginFrame extends JFrame {
         buttonPanel.add(registerButton);
         buttonPanel.add(loginButton);
 
-        setContentPane(UiTheme.createAuthShell("Login", formPanel, buttonPanel));
+        setContentPane(UiTheme.createAuthShell("Welcome Back", formPanel, buttonPanel));
     }
 
     private void switchToRegister() {
@@ -79,16 +85,14 @@ public class LoginFrame extends JFrame {
         Role role = (Role) roleCombo.getSelectedItem();
 
         if (email.isBlank() || password.isBlank() || role == null) {
-            JOptionPane.showMessageDialog(this, "Please fill all fields.",
-                    "Validation", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Please fill in all details.", "Validation", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
         Optional<User> user = authService.login(email, password, role);
 
         if (user.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Invalid credentials or role.",
-                    "Login Failed", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Invalid credentials or incorrect role.", "Access Denied", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
@@ -97,7 +101,6 @@ public class LoginFrame extends JFrame {
         } else {
             new AdminDashboard(user.get(), this).setVisible(true);
         }
-
         setVisible(false);
     }
 }

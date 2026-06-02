@@ -7,10 +7,8 @@ import app.model.ComplaintStatus;
 import app.model.User;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.JTableHeader;
 import java.awt.*;
 import java.time.LocalDate;
-import java.time.format.DateTimeParseException;
 import java.util.List;
 
 public class AdminDashboard extends JFrame {
@@ -19,35 +17,34 @@ public class AdminDashboard extends JFrame {
     private final ComplaintDAO complaintDAO = new ComplaintDAO();
     private final ComplaintResponseDAO responseDAO = new ComplaintResponseDAO();
 
-    private final JLabel totalLabel = new JLabel("Total: 0");
-    private final JLabel pendingLabel = new JLabel("Pending: 0");
-    private final JLabel progressLabel = new JLabel("In Progress: 0");
-    private final JLabel resolvedLabel = new JLabel("Resolved: 0");
-    private final JLabel rejectedLabel = new JLabel("Rejected: 0");
+    private final JLabel totalLabel = new JLabel("0");
+    private final JLabel pendingLabel = new JLabel("0");
+    private final JLabel progressLabel = new JLabel("0");
+    private final JLabel resolvedLabel = new JLabel("0");
+    private final JLabel rejectedLabel = new JLabel("0");
 
-    private final JTextField searchField = new JTextField(20);
+    private final JTextField searchField = new JTextField(15);
     private final JComboBox<String> statusFilter = new JComboBox<>(createStatusFilterOptions());
-    private final JTextField fromDateField = new JTextField(10);
-    private final JTextField toDateField = new JTextField(10);
+    private final JTextField fromDateField = new JTextField(8);
+    private final JTextField toDateField = new JTextField(8);
 
     private final DefaultTableModel tableModel = new DefaultTableModel(
-            new Object[]{"ID", "Student", "Title", "Category", "Status", "Submitted"}, 0);
+            new Object[]{"ID", "Student Requester", "Title Topic", "Category Group", "Status Tag", "Date Tracked"}, 0);
     private final JTable complaintTable = new JTable(tableModel);
-
     private final LoginFrame loginFrame;
 
     public AdminDashboard(User admin, LoginFrame loginFrame) {
         this.admin = admin;
         this.loginFrame = loginFrame;
 
-        setTitle("Admin Dashboard - " + admin.getFullName());
-        setMinimumSize(new Dimension(900, 560));
-        setSize(1150, 700);
+        setTitle("Administration Hub Control Center");
+        setMinimumSize(new Dimension(1100, 680));
+        setSize(1250, 750);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(HIDE_ON_CLOSE);
 
-        setLayout(new BorderLayout(10, 10));
-        getContentPane().setBackground(new Color(245, 247, 252));
+        setLayout(new BorderLayout(0, 16));
+        getContentPane().setBackground(UiTheme.APP_BACKGROUND);
 
         add(createTopBar(), BorderLayout.NORTH);
         add(createCenterPanel(), BorderLayout.CENTER);
@@ -57,79 +54,95 @@ public class AdminDashboard extends JFrame {
     }
 
     private JPanel createTopBar() {
-        JPanel wrapper = new JPanel(new BorderLayout());
-        wrapper.setBorder(BorderFactory.createEmptyBorder(12, 15, 12, 15));
-        wrapper.setBackground(Color.WHITE);
+        JPanel wrapper = new JPanel(new BorderLayout(24, 0));
+        wrapper.setBorder(BorderFactory.createEmptyBorder(16, 20, 16, 20));
+        wrapper.setBackground(UiTheme.CARD_BACKGROUND);
+        wrapper.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, UiTheme.BORDER_COLOR));
 
-        // Stats Panel
-        JPanel statsPanel = new JPanel(new GridLayout(1, 5, 12, 8));
-        statsPanel.setBackground(Color.WHITE);
-        statsPanel.setPreferredSize(new Dimension(0, 56));
+        JPanel statsPanel = new JPanel(new GridLayout(1, 5, 14, 0));
+        statsPanel.setBackground(UiTheme.CARD_BACKGROUND);
 
-        styleStatLabel(totalLabel, new Color(0, 51, 102));
-        styleStatLabel(pendingLabel, new Color(255, 140, 0));
-        styleStatLabel(progressLabel, new Color(0, 123, 255));
-        styleStatLabel(resolvedLabel, new Color(40, 167, 69));
-        styleStatLabel(rejectedLabel, new Color(220, 53, 69));
+        statsPanel.add(createKpiCard("Total Tickets", totalLabel, UiTheme.PRIMARY));
+        statsPanel.add(createKpiCard("Pending Attention", pendingLabel, new Color(245, 158, 11))); // Amber
+        statsPanel.add(createKpiCard("In-Progress", progressLabel, new Color(59, 130, 246)));      // Blue
+        statsPanel.add(createKpiCard("Resolved Done", resolvedLabel, new Color(16, 185, 129)));    // Emerald
+        statsPanel.add(createKpiCard("Rejected Case", rejectedLabel, new Color(239, 68, 68)));     // Red
 
-        statsPanel.add(totalLabel);
-        statsPanel.add(pendingLabel);
-        statsPanel.add(progressLabel);
-        statsPanel.add(resolvedLabel);
-        statsPanel.add(rejectedLabel);
+        JPanel profileArea = new JPanel(new FlowLayout(FlowLayout.RIGHT, 16, 8));
+        profileArea.setBackground(UiTheme.CARD_BACKGROUND);
 
-        // Right side
-        JPanel rightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 0));
-        rightPanel.setBackground(Color.WHITE);
-
-        JLabel adminLabel = new JLabel("Admin: " + admin.getFullName());
-        adminLabel.setFont(new Font("Arial", Font.BOLD, 16));
+        JLabel identityLabel = new JLabel(admin.getFullName());
+        identityLabel.setFont(UiTheme.HEADER_FONT);
 
         JButton logoutButton = new JButton("Logout");
         logoutButton.addActionListener(e -> logout());
-        styleLogoutButton(logoutButton);
+        logoutButton.setPreferredSize(new Dimension(95, 36));
+        styleRedButton(logoutButton);
 
-        rightPanel.add(adminLabel);
-        rightPanel.add(logoutButton);
+        profileArea.add(identityLabel);
+        profileArea.add(logoutButton);
 
         wrapper.add(statsPanel, BorderLayout.CENTER);
-        wrapper.add(rightPanel, BorderLayout.EAST);
+        wrapper.add(profileArea, BorderLayout.EAST);
         return wrapper;
     }
 
-    private void styleStatLabel(JLabel label, Color color) {
-        label.setFont(new Font("Arial", Font.BOLD, 18));     // Increased font
-        label.setForeground(color);
-        label.setHorizontalAlignment(SwingConstants.CENTER);
-        label.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(230, 230, 230), 1),
-                BorderFactory.createEmptyBorder(12, 10, 12, 10)));
+    private JPanel createKpiCard(String title, JLabel metricLbl, Color indicatorColor) {
+        JPanel card = new JPanel(new BorderLayout(0, 4));
+        card.setBackground(UiTheme.APP_BACKGROUND);
+        card.setBorder(BorderFactory.createCompoundBorder(
+                new UiTheme.RoundedBorder(8, UiTheme.BORDER_COLOR),
+                BorderFactory.createEmptyBorder(10, 12, 10, 12)
+        ));
+
+        JLabel titleLabel = new JLabel(title.toUpperCase());
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 11));
+        titleLabel.setForeground(UiTheme.MUTED);
+
+        metricLbl.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        metricLbl.setForeground(indicatorColor);
+
+        card.add(titleLabel, BorderLayout.NORTH);
+        card.add(metricLbl, BorderLayout.CENTER);
+        return card;
     }
 
     private JPanel createCenterPanel() {
-        JPanel panel = new JPanel(new BorderLayout(10, 10));
-        panel.setBorder(BorderFactory.createEmptyBorder(10, 15, 15, 15));
-        panel.setBackground(new Color(245, 247, 252));
+        JPanel centerWrapper = new JPanel(new BorderLayout(0, 16));
+        centerWrapper.setBorder(BorderFactory.createEmptyBorder(0, 20, 20, 20));
+        centerWrapper.setBackground(UiTheme.APP_BACKGROUND);
 
-        // Filter Panel
-        JPanel filterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 10));
-        filterPanel.setBackground(Color.WHITE);
-        filterPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        JPanel tableContainerCard = new JPanel(new BorderLayout(0, 16));
+        tableContainerCard.setBackground(UiTheme.CARD_BACKGROUND);
+        tableContainerCard.setBorder(BorderFactory.createCompoundBorder(
+                new UiTheme.RoundedBorder(12, UiTheme.BORDER_COLOR),
+                BorderFactory.createEmptyBorder(20, 20, 20, 20)
+        ));
 
-        filterPanel.add(new JLabel("Search:"));
+        // Filter Controls Panel
+        JPanel filterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 6));
+        filterPanel.setBackground(UiTheme.CARD_BACKGROUND);
+
+        filterPanel.add(new JLabel("Search Query:"));
         filterPanel.add(searchField);
-        filterPanel.add(new JLabel("Status:"));
+        filterPanel.add(new JLabel("Status State:"));
         filterPanel.add(statusFilter);
-        filterPanel.add(new JLabel("From:"));
+        filterPanel.add(new JLabel("Date From:"));
         filterPanel.add(fromDateField);
         filterPanel.add(new JLabel("To:"));
         filterPanel.add(toDateField);
 
-        JButton applyFilterButton = new JButton("Apply Filter");
-        JButton clearFilterButton = new JButton("Clear");
+        setupInputFieldStyle(searchField);
+        setupInputFieldStyle(statusFilter);
+        setupInputFieldStyle(fromDateField);
+        setupInputFieldStyle(toDateField);
 
-        styleButton(applyFilterButton, new Color(0, 123, 255));
-        styleButton(clearFilterButton, new Color(108, 117, 125));
+        JButton applyFilterButton = new JButton("Filter Map");
+        JButton clearFilterButton = new JButton("Reset");
+        UiTheme.stylePrimaryButton(applyFilterButton);
+        UiTheme.styleMutedButton(clearFilterButton);
+        applyFilterButton.setPreferredSize(new Dimension(110, 36));
+        clearFilterButton.setPreferredSize(new Dimension(90, 36));
 
         applyFilterButton.addActionListener(e -> loadComplaints());
         clearFilterButton.addActionListener(e -> clearFilters());
@@ -137,64 +150,61 @@ public class AdminDashboard extends JFrame {
         filterPanel.add(applyFilterButton);
         filterPanel.add(clearFilterButton);
 
-        // Table Styling
-        complaintTable.setRowHeight(38);                    // Bigger rows
-        complaintTable.setFont(new Font("Arial", Font.PLAIN, 15));
+        // Data Table Configuration
+        UiTheme.styleTable(complaintTable);
         complaintTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        JScrollPane scrollPane = new JScrollPane(complaintTable);
+        scrollPane.setBorder(BorderFactory.createLineBorder(UiTheme.BORDER_COLOR));
 
-        JTableHeader header = complaintTable.getTableHeader();
-        header.setFont(new Font("Arial", Font.BOLD, 16));
-        header.setPreferredSize(new Dimension(header.getWidth(), 45));
+        // Bottom Action Controls
+        JPanel executionTray = new JPanel(new FlowLayout(FlowLayout.RIGHT, 12, 0));
+        executionTray.setBackground(UiTheme.CARD_BACKGROUND);
 
-        // Actions Panel
-        JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 10));
-        actions.setBackground(Color.WHITE);
+        JButton refreshButton = new JButton("Sync Records");
+        JButton openDetailsButton = new JButton("Manage Incident");
+        UiTheme.styleSecondaryButton(refreshButton);
+        UiTheme.stylePrimaryButton(openDetailsButton);
+        refreshButton.setPreferredSize(new Dimension(140, 40));
+        openDetailsButton.setPreferredSize(new Dimension(160, 40));
 
-        JButton refreshButton = new JButton("Refresh");
-        JButton openDetailsButton = new JButton("Open Details");
-
-        styleButton(refreshButton, new Color(40, 167, 69));
-        styleButton(openDetailsButton, new Color(0, 102, 204));
-
-        refreshButton.addActionListener(e -> {
-            refreshStats();
-            loadComplaints();
-        });
+        refreshButton.addActionListener(e -> { refreshStats(); loadComplaints(); });
         openDetailsButton.addActionListener(e -> openDetails());
 
-        actions.add(refreshButton);
-        actions.add(openDetailsButton);
+        executionTray.add(refreshButton);
+        executionTray.add(openDetailsButton);
 
-        panel.add(filterPanel, BorderLayout.NORTH);
-        panel.add(new JScrollPane(complaintTable), BorderLayout.CENTER);
-        panel.add(actions, BorderLayout.SOUTH);
+        tableContainerCard.add(filterPanel, BorderLayout.NORTH);
+        tableContainerCard.add(scrollPane, BorderLayout.CENTER);
+        tableContainerCard.add(executionTray, BorderLayout.SOUTH);
 
-        return panel;
+        centerWrapper.add(tableContainerCard, BorderLayout.CENTER);
+        return centerWrapper;
     }
 
-    private void styleButton(JButton button, Color bgColor) {
-        button.setPreferredSize(new Dimension(130, 42));
-        button.setBackground(bgColor);
-        button.setForeground(Color.WHITE);
-        button.setFocusPainted(false);
-        button.setFont(new Font("Arial", Font.BOLD, 15));
-        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+    private void setupInputFieldStyle(JComponent field) {
+        field.setFont(UiTheme.FIELD_FONT);
+        field.setBackground(Color.WHITE);
+        field.setBorder(BorderFactory.createCompoundBorder(
+                new UiTheme.RoundedBorder(6, UiTheme.BORDER_COLOR),
+                BorderFactory.createEmptyBorder(4, 8, 4, 8)
+        ));
     }
 
-    private void styleLogoutButton(JButton button) {
-        button.setBackground(new Color(220, 53, 69));
-        button.setForeground(Color.WHITE);
-        button.setFocusPainted(false);
-        button.setFont(new Font("Arial", Font.BOLD, 15));
-        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        button.setPreferredSize(new Dimension(110, 42));
+    private void styleRedButton(JButton btn) {
+        btn.setFont(UiTheme.BUTTON_FONT);
+        btn.setForeground(Color.WHITE);
+        btn.setBackground(new Color(239, 68, 68));
+        btn.setFocusPainted(false);
+        btn.setBorderPainted(false);
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btn.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent e) { btn.setBackground(new Color(220, 38, 38)); }
+            public void mouseExited(java.awt.event.MouseEvent e) { btn.setBackground(new Color(239, 68, 68)); }
+        });
     }
 
     private void logout() {
-        int confirm = JOptionPane.showConfirmDialog(this,
-                "Are you sure you want to logout?", "Confirm Logout",
-                JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
-
+        int confirm = JOptionPane.showConfirmDialog(this, "Terminate active administrator dashboard session?", "Confirm Signout", JOptionPane.YES_NO_OPTION);
         if (confirm == JOptionPane.YES_OPTION) {
             setVisible(false);
             loginFrame.clearFields();
@@ -221,66 +231,41 @@ public class AdminDashboard extends JFrame {
     }
 
     private void refreshStats() {
-        totalLabel.setText("Total: " + complaintDAO.countAll());
-        pendingLabel.setText("Pending: " + complaintDAO.countByStatus(ComplaintStatus.PENDING));
-        progressLabel.setText("In Progress: " + complaintDAO.countByStatus(ComplaintStatus.IN_PROGRESS));
-        resolvedLabel.setText("Resolved: " + complaintDAO.countByStatus(ComplaintStatus.RESOLVED));
-        rejectedLabel.setText("Rejected: " + complaintDAO.countByStatus(ComplaintStatus.REJECTED));
+        totalLabel.setText(String.valueOf(complaintDAO.countAll()));
+        pendingLabel.setText(String.valueOf(complaintDAO.countByStatus(ComplaintStatus.PENDING)));
+        progressLabel.setText(String.valueOf(complaintDAO.countByStatus(ComplaintStatus.IN_PROGRESS)));
+        resolvedLabel.setText(String.valueOf(complaintDAO.countByStatus(ComplaintStatus.RESOLVED)));
+        rejectedLabel.setText(String.valueOf(complaintDAO.countByStatus(ComplaintStatus.REJECTED)));
     }
 
     private void loadComplaints() {
         tableModel.setRowCount(0);
-
         ComplaintStatus status = null;
         String selected = (String) statusFilter.getSelectedItem();
         if (selected != null && !"ALL".equals(selected)) {
             status = ComplaintStatus.valueOf(selected);
         }
-
         LocalDate from = parseDate(fromDateField.getText().trim());
         LocalDate to = parseDate(toDateField.getText().trim());
 
-        List<Complaint> complaints = complaintDAO.getAll(
-                searchField.getText().trim(), status, from, to);
-
+        List<Complaint> complaints = complaintDAO.getAll(searchField.getText().trim(), status, from, to);
         for (Complaint c : complaints) {
-            tableModel.addRow(new Object[]{
-                    c.getId(),
-                    c.getStudentName(),
-                    c.getTitle(),
-                    c.getCategory(),
-                    c.getStatus(),
-                    c.getSubmittedAt()
-            });
+            tableModel.addRow(new Object[]{c.getId(), c.getStudentName(), c.getTitle(), c.getCategory(), c.getStatus(), c.getSubmittedAt()});
         }
     }
 
     private LocalDate parseDate(String value) {
         if (value == null || value.isBlank()) return null;
-        try {
-            return LocalDate.parse(value);
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Invalid date format. Use YYYY-MM-DD.",
-                    "Validation", JOptionPane.WARNING_MESSAGE);
-            return null;
-        }
+        try { return LocalDate.parse(value); } catch (Exception e) { return null; }
     }
 
     private void openDetails() {
         int row = complaintTable.getSelectedRow();
-        if (row < 0) {
-            JOptionPane.showMessageDialog(this, "Please select a complaint first.");
-            return;
-        }
-
+        if (row < 0) { JOptionPane.showMessageDialog(this, "Please mark a complaint item row to open map views."); return; }
         int id = (int) tableModel.getValueAt(row, 0);
         Complaint complaint = complaintDAO.getById(id);
-
         if (complaint != null) {
-            new ComplaintDetailsFrame(admin, complaint, true, complaintDAO, responseDAO, () -> {
-                refreshStats();
-                loadComplaints();
-            }).setVisible(true);
+            new ComplaintDetailsFrame(admin, complaint, true, complaintDAO, responseDAO, () -> { refreshStats(); loadComplaints(); }).setVisible(true);
         }
     }
 }

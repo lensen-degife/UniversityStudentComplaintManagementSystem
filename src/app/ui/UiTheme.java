@@ -1,114 +1,162 @@
 package app.ui;
 
 import javax.swing.*;
+import javax.swing.border.Border;
+import javax.swing.table.JTableHeader;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 public final class UiTheme {
 
-    public static final Color BACKGROUND = new Color(245, 247, 252);
-    public static final Color PRIMARY = new Color(0, 102, 204);
-    public static final Color SECONDARY = new Color(70, 130, 180);
-    public static final Color MUTED = new Color(108, 117, 125);
-    public static final Color TEXT = new Color(50, 50, 50);
-    public static final Color HEADING = new Color(0, 51, 102);
+    // Modern SaaS Slate Palette
+    public static final Color APP_BACKGROUND = new Color(248, 250, 252);   // Slate 50
+    public static final Color CARD_BACKGROUND = Color.WHITE;
+    public static final Color PRIMARY = new Color(15, 23, 42);             // Slate 900
+    public static final Color PRIMARY_HOVER = new Color(51, 65, 85);       // Slate 700
+    public static final Color ACCENT = new Color(79, 70, 229);             // Indigo 600
+    public static final Color ACCENT_HOVER = new Color(67, 56, 202);       // Indigo 700
+    public static final Color MUTED = new Color(100, 116, 139);            // Slate 500
+    public static final Color MUTED_HOVER = new Color(71, 85, 105);        // Slate 600
+    public static final Color TEXT_MAIN = new Color(15, 23, 42);           // Slate 900
+    public static final Color TEXT_MUTED = new Color(148, 163, 184);       // Slate 400
+    public static final Color BORDER_COLOR = new Color(226, 232, 240);     // Slate 200
 
-    public static final Font TITLE_FONT = new Font("Arial", Font.BOLD, 32);
-    public static final Font LABEL_FONT = new Font("Arial", Font.PLAIN, 16);
-    public static final Font FIELD_FONT = new Font("Arial", Font.PLAIN, 16);
-    public static final Font BUTTON_FONT = new Font("Arial", Font.BOLD, 16);
+    // PC-Optimized Typography (Larger Sizes)
+    public static final Font TITLE_FONT = new Font("Segoe UI", Font.BOLD, 36);
+    public static final Font HEADER_FONT = new Font("Segoe UI", Font.BOLD, 18);
+    public static final Font LABEL_FONT = new Font("Segoe UI", Font.BOLD, 15);
+    public static final Font FIELD_FONT = new Font("Segoe UI", Font.PLAIN, 16);
+    public static final Font BUTTON_FONT = new Font("Segoe UI", Font.BOLD, 16);
 
-    private UiTheme() {
-    }
+    private UiTheme() {}
 
     public static void applyLookAndFeel() {
         try {
-            UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
+            UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
+            UIManager.put("Panel.background", APP_BACKGROUND);
+            UIManager.put("Label.foreground", TEXT_MAIN);
+            UIManager.put("Label.font", FIELD_FONT);
+            UIManager.put("ScrollPane.border", BorderFactory.createLineBorder(BORDER_COLOR, 1));
+            UIManager.put("TabbedPane.background", APP_BACKGROUND);
+            UIManager.put("TabbedPane.selected", CARD_BACKGROUND);
+            UIManager.put("TabbedPane.font", HEADER_FONT);
         } catch (Exception e) {
-            try {
-                UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
+            e.printStackTrace();
         }
     }
 
     public static JPanel createFormRow(String labelText, JComponent field) {
-        JPanel panel = new JPanel(new GridBagLayout());
-        panel.setBackground(BACKGROUND);
-
-        GridBagConstraints labelConstraints = new GridBagConstraints();
-        labelConstraints.gridx = 0;
-        labelConstraints.gridy = 0;
-        labelConstraints.anchor = GridBagConstraints.WEST;
-        labelConstraints.insets = new Insets(0, 0, 0, 12);
-        labelConstraints.weightx = 0;
+        JPanel panel = new JPanel(new BorderLayout(0, 8)); // Slightly larger gap for PC
+        panel.setBackground(CARD_BACKGROUND);
 
         JLabel label = new JLabel(labelText);
         label.setFont(LABEL_FONT);
-        label.setForeground(TEXT);
-        label.setPreferredSize(new Dimension(140, 28));
-        panel.add(label, labelConstraints);
-
-        GridBagConstraints fieldConstraints = new GridBagConstraints();
-        fieldConstraints.gridx = 1;
-        fieldConstraints.gridy = 0;
-        fieldConstraints.fill = GridBagConstraints.HORIZONTAL;
-        fieldConstraints.weightx = 1.0;
-        fieldConstraints.anchor = GridBagConstraints.WEST;
+        label.setForeground(TEXT_MAIN);
+        panel.add(label, BorderLayout.NORTH);
 
         field.setFont(FIELD_FONT);
-        field.setPreferredSize(new Dimension(0, 38));
-        panel.add(field, fieldConstraints);
+        field.setBackground(Color.WHITE);
+        field.setForeground(TEXT_MAIN);
 
+        if (field instanceof JTextField || field instanceof JComboBox) {
+            field.setPreferredSize(new Dimension(0, 50)); // Increased height from 42 to 50
+            field.setBorder(BorderFactory.createCompoundBorder(
+                    new RoundedBorder(8, BORDER_COLOR),
+                    BorderFactory.createEmptyBorder(0, 14, 0, 14) // Slightly wider text inset
+            ));
+            if (field instanceof JTextField) {
+                ((JTextField) field).setCaretColor(ACCENT);
+            }
+        }
+        panel.add(field, BorderLayout.CENTER);
         return panel;
     }
 
-    public static void stylePrimaryButton(JButton button) {
-        styleButton(button, PRIMARY);
-    }
+    public static void stylePrimaryButton(JButton button) { styleButton(button, ACCENT, ACCENT_HOVER); }
+    public static void styleSecondaryButton(JButton button) { styleButton(button, PRIMARY, PRIMARY_HOVER); }
+    public static void styleMutedButton(JButton button) { styleButton(button, MUTED, MUTED_HOVER); }
 
-    public static void styleSecondaryButton(JButton button) {
-        styleButton(button, SECONDARY);
-    }
-
-    public static void styleMutedButton(JButton button) {
-        styleButton(button, MUTED);
-    }
-
-    public static void styleButton(JButton button, Color color) {
-        button.setPreferredSize(new Dimension(140, 45));
-        button.setBackground(color);
-        button.setForeground(Color.WHITE);
-        button.setFocusPainted(false);
+    static void styleButton(JButton button, Color base, Color hover) {
         button.setFont(BUTTON_FONT);
+        button.setForeground(Color.WHITE);
+        button.setBackground(base);
+        button.setFocusPainted(false);
+        button.setBorderPainted(false);
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        button.setPreferredSize(new Dimension(160, 50)); // Increased from 145x42
+        button.addMouseListener(new MouseAdapter() {
+            public void mouseEntered(MouseEvent e) { button.setBackground(hover); }
+            public void mouseExited(MouseEvent e) { button.setBackground(base); }
+        });
+    }
+
+    public static void styleTable(JTable table) {
+        table.setRowHeight(50); // Increased from 40
+        table.setFont(FIELD_FONT);
+        table.setForeground(TEXT_MAIN);
+        table.setGridColor(BORDER_COLOR);
+        table.setShowVerticalLines(false);
+        table.setSelectionBackground(new Color(238, 242, 255)); // Light Indigo selection
+        table.setSelectionForeground(TEXT_MAIN);
+
+        JTableHeader header = table.getTableHeader();
+        header.setFont(HEADER_FONT);
+        header.setBackground(APP_BACKGROUND);
+        header.setForeground(PRIMARY);
+        header.setPreferredSize(new Dimension(0, 50)); // Increased from 42
+        header.setBorder(BorderFactory.createMatteBorder(0, 0, 2, 0, BORDER_COLOR));
     }
 
     public static JPanel createAuthShell(String title, JPanel formPanel, JPanel buttonPanel) {
-        JPanel mainPanel = new JPanel(new BorderLayout());
-        mainPanel.setBackground(BACKGROUND);
-        mainPanel.setBorder(BorderFactory.createEmptyBorder(40, 50, 40, 50));
+        JPanel mainWrapper = new JPanel(new GridBagLayout());
+        mainWrapper.setBackground(APP_BACKGROUND);
+
+        JPanel cardPanel = new JPanel(new BorderLayout(0, 30)); // Increased gap from 24
+        cardPanel.setBackground(CARD_BACKGROUND);
+        cardPanel.setBorder(BorderFactory.createCompoundBorder(
+                new RoundedBorder(16, BORDER_COLOR),
+                BorderFactory.createEmptyBorder(50, 55, 50, 55) // Wider padding
+        ));
+        cardPanel.setPreferredSize(new Dimension(560, 680)); // Increased from 460x560
 
         JLabel titleLabel = new JLabel(title, SwingConstants.CENTER);
         titleLabel.setFont(TITLE_FONT);
-        titleLabel.setForeground(HEADING);
-        titleLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 30, 0));
+        titleLabel.setForeground(PRIMARY);
 
-        formPanel.setBackground(BACKGROUND);
-        buttonPanel.setBackground(BACKGROUND);
+        formPanel.setBackground(CARD_BACKGROUND);
+        buttonPanel.setBackground(CARD_BACKGROUND);
 
-        mainPanel.add(titleLabel, BorderLayout.NORTH);
-        mainPanel.add(formPanel, BorderLayout.CENTER);
-        mainPanel.add(buttonPanel, BorderLayout.SOUTH);
+        cardPanel.add(titleLabel, BorderLayout.NORTH);
+        cardPanel.add(formPanel, BorderLayout.CENTER);
+        cardPanel.add(buttonPanel, BorderLayout.SOUTH);
 
-        return mainPanel;
+        mainWrapper.add(cardPanel);
+        return mainWrapper;
     }
 
     public static void configureAuthFrame(JFrame frame, String title) {
         frame.setTitle(title);
-        frame.setMinimumSize(new Dimension(520, 480));
-        frame.setSize(670, 600);
+        // Scaled up for standard PC desktop dimensions
+        frame.setMinimumSize(new Dimension(1024, 768));
+        frame.setSize(1280, 720);
         frame.setLocationRelativeTo(null);
         frame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
+        applyLookAndFeel();
+    }
+
+    public static class RoundedBorder implements Border {
+        private final int radius;
+        private final Color color;
+        public RoundedBorder(int radius, Color color) { this.radius = radius; this.color = color; }
+        public Insets getBorderInsets(Component c) { return new Insets(radius/2, radius/2, radius/2, radius/2); }
+        public boolean isBorderOpaque() { return true; }
+        public void paintBorder(Component c, Graphics g, int x, int y, int w, int h) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setColor(color);
+            g2.drawRoundRect(x, y, w - 1, h - 1, radius, radius);
+            g2.dispose();
+        }
     }
 }
